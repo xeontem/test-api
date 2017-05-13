@@ -25,6 +25,32 @@ a {
 	text-decoration: none;
 }
 
+.auth-main-container {
+    margin-top: -104px;
+    transition: all 0.5s;
+}
+
+.auth-main-container:hover {
+    margin-top: 0;
+}
+
+.auth {
+    margin: -9px auto 0 auto;
+    padding: 4px 5px;
+    display: table;
+    background: red;
+    color: white;
+    border-radius: 5px;
+    border: 1px solid black;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.auth:hover {
+    background: white;
+    color: black;
+}
+
 .auth-section {
 	position: relative;
 	height: 75px;
@@ -38,7 +64,7 @@ a {
     position: absolute;
     right: 0;
     top: -19px;
-    border: 2px solid red;
+    border: 1px solid #2f2f2f;
     border-radius: 50%;
 }
 
@@ -61,9 +87,10 @@ a {
     height: 29px;
     color: white;
     background: red;
-    border: 1px solid black;
+    border: 1px solid #2f2f2f;
     border-radius: 5px;
     cursor: pointer;
+    transition: all 0.5s;
 }
 
 .btn-login {
@@ -72,28 +99,12 @@ a {
 
 .btn:hover {
 	background: white;
-	color: black;
-}
-
-.btn-subscr {
-    /* position: absolute; */
-    top: 290px;
-    right: 30px;
-    width: 100px;
-    height: 25px;
-    z-index: 100;
-    border-radius: 0;
-    /* border: 1px solid black; */
-    background: black;
-    color: white;
-    /* cursor: pointer; */
+	color: #2f2f2f;
 }
 
 .btn-search {
     position: initial;
-    /*height: 29px;*/
     border-radius: 5px 0px 0px 5px;
-    /*border: 1px solid black;*/
     border-right: 0;
 }
 
@@ -132,15 +143,26 @@ a {
 	opacity: 0;
 }
 
-label/*[for="search"]*/ {
+.preview {
+	width: 350px;
+}
+
+.play {
 	position: absolute;
-	left: 135px;
-	font-size: 20px;
-	line-height: 31px;
+    left: 42%;
+    top: 31%;
+    font-size: 46pt !important; 
+    cursor: pointer;
+    transition: all 0.5s;
+}
+
+.play:hover {
+	color: red;
 }
 
 .videos {
 	position: relative;
+	height: 1080px;
 }
 
 .wrapper {
@@ -158,19 +180,14 @@ label/*[for="search"]*/ {
 	position: absolute;
 	text-align: center;
 	width: 100%;
-	transition: left 0.5s;
-	cursor: e-resize;
+	transition: left 0.7s cubic-bezier(0, 0, 0.15, 1.57);/*here */
+	cursor: -webkit-grab;
 }
-/*input::-webkit-input-placeholder { 
-	color: #0b1308; 
-}*/
-
 
 .component {
 	position: relative;
     width: 350px;
     background: #cc181e;
-    /* border: 1px solid #ffffff; */
     opacity: 0.91;
     color: #ffffff;
     display: inline-block;
@@ -187,30 +204,19 @@ label/*[for="search"]*/ {
 	opacity: 0.99;
 	box-shadow: 0 0 80px 1px #000;
 }
-/*
-.component img,
-.coverPreview {
-	width: 100%;
-	height: 185px;
+
+.placeholder {
+    margin-top: -33px;
+    height: 230px;
+    overflow: hidden;
 }
 
-.component img {
-	left: 0;
-	position: absolute;
-	z-index: -1;
+.info-container div{
+    position: absolute;
+    right: 15px;
+    bottom: 120px;
+    z-index: 100;
 }
-
-.coverPreview {
-	font-size: 70px;
-	background: rgba(190, 218, 190, 0.38);
-	cursor: pointer;
-	color: #0c170c;
-}
-
-.coverPreview i{
-	line-height: 185px;
-}*/
-
 
 #info {
 	display: flex;
@@ -231,7 +237,7 @@ label/*[for="search"]*/ {
 }
 
 .componentHeader {
-	background: black;
+	background: #2f2f2f;
     text-align: center;
     padding: 15px;
     margin: 0;
@@ -279,11 +285,12 @@ label/*[for="search"]*/ {
 	margin: 0;
 	margin-bottom: 8px;
 	padding: 0;
+	transition: all 0.5s;
 }
 
 .paging li {
     cursor: pointer;
-    color: black;
+    color: #2f2f2f;
     font-size: 14px;
     font-weight: bold;
     line-height: 20px;
@@ -292,7 +299,7 @@ label/*[for="search"]*/ {
     height: 20px;
     border-radius: 50%;
     background: white;
-    border: 1px solid black;
+    border: 1px solid #2f2f2f;
     margin: 0 3px;
     -webkit-user-select: none;
     transition: all 0.5s;
@@ -301,7 +308,7 @@ label/*[for="search"]*/ {
 .paging li:hover,
 .paging .active {
     background: red;
-    /* border: 1px solid black; */
+    /* border: 1px solid #2f2f2f; */
     color: white;
 }
 
