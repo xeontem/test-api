@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,9 +77,14 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.default = {
+    isAuthenticate: false,
+    apiKey: 'AIzaSyA17KYHw-TfsiBy3TdT8hThejNcLjdNnOo',
     videoCount: 1,
+    requestCount: 15,
     pageNumber: 0,
     isRemoved: false,
+    slidePos: [0],
+    currentPage: 0,
     reset: function reset() {
         this.videoCount = 1;
         this.pageNumber = 0;
@@ -92,6 +97,15 @@ exports.default = {
     },
     decreaseOpacity: function decreaseOpacity() {
         document.querySelector('#auth-status').style.opacity = '0';
+    },
+    chooseVideosCount: function chooseVideosCount() {
+        if (window.innerWidth > 1250) {
+            this.videosCount = 3;
+        } else if (window.innerWidth > 930) {
+            this.videosCount = 2;
+        } else {
+            this.videosCount = 1;
+        }
     }
 };
 
@@ -103,10 +117,12 @@ exports.default = {
 
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+    value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+exports.addListenersAfterResponse = addListenersAfterResponse;
 
 var _config = __webpack_require__(0);
 
@@ -116,233 +132,289 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Slide = function () {
-	function Slide() {
-		_classCallCheck(this, Slide);
+var Listeners = function () {
+    function Listeners() {
+        _classCallCheck(this, Listeners);
+    }
 
-		Slide.slidePos = [0];
-		Slide.currentPage = 0;
-		this.addNew = false;
-	}
+    _createClass(Listeners, [{
+        key: 'addListeners',
+        value: function addListeners(main) {
+            var _this = this;
 
-	_createClass(Slide, [{
-		key: 'addListenersAfterResponse',
-		value: function addListenersAfterResponse() {
-			var _this = this;
+            //--------------------------------------- event listener for 'Enter' key --------------------------------
+            document.querySelector('#search').addEventListener('keypress', function (e) {
+                if (e.keyCode === 13 && this.value) {
+                    document.title = this.value.toUpperCase();
+                    _config2.default.slidePos = [0];
+                    if (main.newSearch) {
+                        _config2.default.reset();
+                        var wrapper = document.querySelector('.wrapper');
+                        var pages = document.querySelector('#pages');
+                        while (wrapper.firstChild) {
+                            wrapper.removeChild(wrapper.firstChild);
+                        }while (pages.firstChild) {
+                            pages.removeChild(pages.firstChild);
+                        }
+                    }
+                    main.newSearch = true;
+                    main.render.addNewSlide(true, null, null);
+                    main.request.initialization(main);
+                    _config2.default.currentPage = 0;
+                } else if (e.keyCode === 13 && !this.value) {
+                    showInfo('please enter search keyword');
+                }
+            });
+            //------------------------------------- event listener for SEARCH button -------------------------------
+            document.querySelector('.btn-search').addEventListener('click', function (e) {
+                if (document.querySelector('#search').value) {
+                    document.title = document.querySelector('#search').value.toUpperCase();
+                    _config2.default.slidePos = [0];
+                    if (main.newSearch) {
+                        _config2.default.reset();
+                        var wrapper = document.querySelector('.wrapper');
+                        var pages = document.querySelector('#pages');
+                        while (wrapper.firstChild) {
+                            wrapper.removeChild(wrapper.firstChild);
+                        }while (pages.firstChild) {
+                            pages.removeChild(pages.firstChild);
+                        }
+                    }
+                    main.newSearch = true;
+                    main.render.addNewSlide(true, null, null);
+                    main.request.initialization(main);
+                    _config2.default.currentPage = 0;
+                } else showInfo('please enter search keyword');
+            });
 
-			//play button listener
-			document.querySelector('.play').addEventListener('mousedown', function (e) {
-				_this.slideStart(e);
-				e.preventDefault();
-			});
-		}
-	}, {
-		key: 'addListeners',
-		value: function addListeners(render, request) {
-			var _this2 = this;
+            //authorization button listener
+            var clicked = false;
+            document.querySelector('.auth-main-container').addEventListener('touchstart', function (e) {
+                if (!clicked) {
+                    document.querySelector('.auth-main-container').style.marginTop = '0px';
+                    clicked = true;
+                } else {
+                    document.querySelector('.auth-main-container').style.marginTop = '-104px';
+                    clicked = false;
+                }
+            });
+            // subscribe listeners
 
-			//authorization button listener
-			var clicked = false;
-			document.querySelector('.auth-main-container').addEventListener('touchstart', function (e) {
-				if (!clicked) {
-					document.querySelector('.auth-main-container').style.marginTop = '0px';
-					clicked = true;
-				} else {
-					document.querySelector('.auth-main-container').style.marginTop = '-104px';
-					clicked = false;
-				}
-			});
 
-			//slides listeners
-			document.querySelector('.videos').addEventListener('mousedown', function (e) {
-				_this2.slideStart(e);
-				e.preventDefault();
-			});
-			document.querySelector('.videos').addEventListener('touchstart', function (e) {
-				_this2.slideStart(e, true);
-				e.preventDefault();
-			});
+            //slides listeners
+            document.querySelector('.videos').addEventListener('mousedown', function (e) {
+                _this.slideStart(e);
+                e.preventDefault();
+            });
+            document.querySelector('.videos').addEventListener('touchstart', function (e) {
+                _this.slideStart(e, true);
+                e.preventDefault();
+            });
 
-			document.querySelector('.videos').addEventListener('mousemove', function (e) {
-				_this2.slideMove(e, false, render, request);
-				e.preventDefault();
-			});
-			document.querySelector('.videos').addEventListener('touchmove', function (e) {
-				_this2.slideMove(e, true, render, request);
-				e.preventDefault();
-			});
+            document.querySelector('.videos').addEventListener('mousemove', function (e) {
+                _this.slideMove(e, false, main.render, main.request);
+                e.preventDefault();
+            });
+            document.querySelector('.videos').addEventListener('touchmove', function (e) {
+                _this.slideMove(e, true, main.render, main.request);
+                e.preventDefault();
+            });
 
-			document.querySelector('.videos').addEventListener('mouseup', function (e) {
-				_this2.slideEnd(e);
-				e.preventDefault();
-			});
-			document.querySelector('.videos').addEventListener('touchend', function (e) {
-				_this2.slideEnd(e);
-				e.preventDefault();
-			});
+            document.querySelector('.videos').addEventListener('mouseup', function (e) {
+                _this.slideEnd(e);
+                e.preventDefault();
+            });
+            document.querySelector('.videos').addEventListener('touchend', function (e) {
+                _this.slideEnd(e);
+                e.preventDefault();
+            });
 
-			// paging listeners
-			document.querySelector('#pages').addEventListener('click', function (e) {
-				var index = _this2.getTargetIndex(e);
-				//let isFirstClicked = (index === 0) && (e.target === document.querySelector('#pages li'));
-				//if (index !== 0 || isFirstClicked) {
-				var allSlides = document.querySelectorAll('.slide');
-				var currentLeft = parseInt(allSlides[index].style.left);
-				if (currentLeft !== 0) {
-					_this2.activatePage(index);
-					for (var i = 0; i < allSlides.length; i++) {
-						var offset = parseInt(allSlides[i].style.left) - currentLeft;
-						Slide.slidePos[i] = offset;
-						allSlides[i].style.left = offset + 'px';
-					}
-				}
-				if (index === allSlides.length - 1) {
-					render.addNewSlide(null, true, null);
-					request.newRequest();
-				}
-				//}
-			});
-		}
-	}, {
-		key: 'slideStart',
-		value: function slideStart(e, isTouchEvent) {
-			if (this.isTouch) {
-				var _allSlides = document.querySelectorAll('.slide');
-				for (var i = 0; i < _allSlides.length; i++) {
-					_allSlides[i].style.left = Slide.slidePos[i] + 'px';
-				}
-			}
-			this.isTouch = true;
-			if (isTouchEvent) {
-				this.pointX = e.changedTouches[0].clientX;
-			} else {
-				this.pointX = e.pageX;
-			}
-			this.startX = this.pointX;
-			var allSlides = document.querySelectorAll('.slide');
-			Slide.slidePos = [];
-			for (var _i = 0; _i < allSlides.length; _i++) {
-				Slide.slidePos.push(parseInt(allSlides[_i].style.left));
-			}
-		}
-	}, {
-		key: 'slideMove',
-		value: function slideMove(e, isTouchEvent, render, request) {
-			if (isTouchEvent) {
-				this.deltaX = e.changedTouches[0].clientX - this.pointX;
-				this.pointX = e.changedTouches[0].clientX;
-			} else {
-				this.deltaX = e.pageX - this.pointX;
-				this.pointX = e.pageX;
-			}
-			if (this.isTouch) {
-				var allSlides = document.querySelectorAll('.slide');
-				var offset = void 0;
-				this.next = false;
-				for (var i = 0; i < allSlides.length; i++) {
-					offset = parseInt(allSlides[i].style.left) + this.deltaX;
-					if (this.deltaX < 0) {
-						this.next = true;
-					}
-					var x = void 0;
-					if (isTouchEvent) {
-						x = Math.abs(e.changedTouches[0].clientX - this.startX);
-					} else {
-						x = Math.abs(e.pageX - this.startX);
-					}
-					if (x > window.innerWidth / 3) {
-						this.isTouch = false;
-						var isMoveFirstSlide = false;
-						if (parseInt(allSlides[i].style.left) > Slide.slidePos[i]) {
-							isMoveFirstSlide = true;
-							offset = Slide.slidePos[i] + window.innerWidth;
-						} else {
-							offset = Slide.slidePos[i] - window.innerWidth;
-						}
-						if (isMoveFirstSlide && Slide.slidePos[0] === 0) {
-							offset -= window.innerWidth;
-						}
-					}
-					allSlides[i].style.left = offset + 'px';
-					if (parseInt(allSlides[i].style.left) === 0) {
-						this.activatePage(i);
-					}
-				}
-				if (this.addNew) {
+            // paging listeners
+            document.querySelector('#pages').addEventListener('click', function (e) {
+                var index = _this.getTargetIndex(e);
+                var allSlides = document.querySelectorAll('.slide');
+                var currentLeft = parseInt(allSlides[index].style.left);
+                if (currentLeft !== 0) {
+                    _this.activatePage(index);
+                    for (var i = 0; i < allSlides.length; i++) {
+                        var offset = parseInt(allSlides[i].style.left) - currentLeft;
+                        _config2.default.slidePos[i] = offset;
+                        allSlides[i].style.left = offset + 'px';
+                    }
+                }
+                if (index === allSlides.length - 1) {
+                    main.render.addNewSlide(null, true, null);
+                    main.request.newRequest();
+                }
+                //}
+            });
+        }
+    }, {
+        key: 'slideStart',
+        value: function slideStart(e, isTouchEvent) {
+            if (this.isTouch) {
+                var _allSlides = document.querySelectorAll('.slide');
+                for (var i = 0; i < _allSlides.length; i++) {
+                    _allSlides[i].style.left = _config2.default.slidePos[i] + 'px';
+                }
+            }
+            this.isTouch = true;
+            if (isTouchEvent) {
+                this.pointX = e.changedTouches[0].clientX;
+            } else {
+                this.pointX = e.pageX;
+            }
+            this.startX = this.pointX;
+            var allSlides = document.querySelectorAll('.slide');
+            _config2.default.slidePos = [];
+            for (var _i = 0; _i < allSlides.length; _i++) {
+                _config2.default.slidePos.push(parseInt(allSlides[_i].style.left));
+            }
+        }
+    }, {
+        key: 'slideMove',
+        value: function slideMove(e, isTouchEvent, render, request) {
+            if (isTouchEvent) {
+                this.deltaX = e.changedTouches[0].clientX - this.pointX;
+                this.pointX = e.changedTouches[0].clientX;
+            } else {
+                this.deltaX = e.pageX - this.pointX;
+                this.pointX = e.pageX;
+            }
+            if (this.isTouch) {
+                var allSlides = document.querySelectorAll('.slide');
+                var offset = void 0;
+                this.next = false;
+                for (var i = 0; i < allSlides.length; i++) {
+                    offset = parseInt(allSlides[i].style.left) + this.deltaX;
+                    if (this.deltaX < 0) {
+                        this.next = true;
+                    }
+                    var x = void 0;
+                    if (isTouchEvent) {
+                        x = Math.abs(e.changedTouches[0].clientX - this.startX);
+                    } else {
+                        x = Math.abs(e.pageX - this.startX);
+                    }
+                    if (x > window.innerWidth / 3) {
+                        this.isTouch = false;
+                        var isMoveFirstSlide = false;
+                        if (parseInt(allSlides[i].style.left) > _config2.default.slidePos[i]) {
+                            isMoveFirstSlide = true;
+                            offset = _config2.default.slidePos[i] + window.innerWidth;
+                        } else {
+                            offset = _config2.default.slidePos[i] - window.innerWidth;
+                        }
+                        if (isMoveFirstSlide && _config2.default.slidePos[0] === 0) {
+                            offset -= window.innerWidth;
+                        }
+                    }
+                    allSlides[i].style.left = offset + 'px';
+                    if (parseInt(allSlides[i].style.left) === 0) {
+                        this.activatePage(i);
+                    }
+                }
+                if (_config2.default.slidePos[_config2.default.slidePos.length - 2] === 0) {
+                    render.addNewSlide(null, true, true);
+                    request.newRequest();
+                }
+            }
+        }
+    }, {
+        key: 'slideEnd',
+        value: function slideEnd(e) {
+            if (this.isTouch) {
+                var allSlides = document.querySelectorAll('.slide');
+                for (var i = 0; i < allSlides.length; i++) {
+                    allSlides[i].style.left = _config2.default.slidePos[i] + 'px';
+                }
+            }
+            this.isTouch = false;
+        }
+    }, {
+        key: 'activatePage',
+        value: function activatePage(index) {
+            var activeLi = document.querySelectorAll('.active');
+            if (activeLi) {
+                for (var i = 0; i < activeLi.length; i++) {
+                    activeLi[i].classList.remove('active');
+                }
+            }
+            document.querySelectorAll('#pages li')[index].className = 'active';
+            _config2.default.currentPage = index;
+        }
+    }, {
+        key: 'getTargetIndex',
+        value: function getTargetIndex(e) {
+            var target = e.target;
+            return Array.prototype.indexOf.call(target.parentNode.childNodes, target);
+        }
+    }]);
 
-					render.addNewSlide(null, true, true);
-					request.newRequest();
-					this.addNew = false;
-					//-------------------------------- animation --------------------------------
-					var index = this.getTargetIndex(e);
-					//Slide.animateComponent(index);// add animation
-					//---------------------------------------------------------------------------
-				}
-				this.addNewCheck();
-			}
-		}
-	}, {
-		key: 'slideEnd',
-		value: function slideEnd(e) {
-			this.addNewCheck();
-			if (this.isTouch) {
-				var allSlides = document.querySelectorAll('.slide');
-				for (var i = 0; i < allSlides.length; i++) {
-					allSlides[i].style.left = Slide.slidePos[i] + 'px';
-				}
-			}
-			this.isTouch = false;
-		}
-	}, {
-		key: 'addNewCheck',
-		value: function addNewCheck() {
-			if (Slide.slidePos[Slide.slidePos.length - 2] === 0 && this.next) {
-				this.addNew = true;
-			}
-		}
-	}, {
-		key: 'activatePage',
-		value: function activatePage(ind) {
-			var activeLi = document.querySelectorAll('.active');
-			if (activeLi) {
-				for (var i = 0; i < activeLi.length; i++) {
-					activeLi[i].classList.remove('active');
-				}
-			}
-			document.querySelectorAll('#pages li')[ind].className = 'active';
-			Slide.currentPage = ind;
-		}
-	}, {
-		key: 'getTargetIndex',
-		value: function getTargetIndex(e) {
-			var target = e.target;
-			return Array.prototype.indexOf.call(target.parentNode.childNodes, target);
-		}
-	}], [{
-		key: 'animateComponent',
-		value: function animateComponent(index) {
-			var componentList = document.querySelectorAll('.component');
-			for (var i = 2; i >= 0; i--) {
-				Slide.addClass(componentList[index + i], 'animate');
-				setTimeout(Slide.removeClass.bind(this, componentList[index + i], 'animate'), 1000);
-			}
-		}
-	}, {
-		key: 'addClass',
-		value: function addClass(node, cls) {
-			node.classList.add(cls);
-		}
-	}, {
-		key: 'removeClass',
-		value: function removeClass(node, cls) {
-			node.classList.remove(cls);
-		}
-	}]);
-
-	return Slide;
+    return Listeners;
 }();
 
-exports.default = Slide;
+exports.default = Listeners;
+function addListenersAfterResponse(response, index, videoID) {
+    //play button listener mouse
+    document.querySelectorAll('.play')[index].addEventListener('click', function (e) {
+
+        var component = document.querySelectorAll('.component')[index];
+        var placeholder = component.children[1];
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('width', '350px');
+        iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoID + '?autoplay=1');
+        iframe.setAttribute('allowfullscreen', '');
+        placeholder.parentNode.insertBefore(iframe, placeholder.nextSibling); //appendChild(iframe);
+        placeholder.style.display = 'none';
+    });
+
+    //play button listener touch
+    document.querySelectorAll('.play')[index].addEventListener('touchstart', function (e) {
+
+        var component = document.querySelectorAll('.component')[index];
+        var placeholder = component.children[1];
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('width', '350px');
+        iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoID + '?autoplay=1');
+        iframe.setAttribute('allowfullscreen', '');
+        placeholder.parentNode.insertBefore(iframe, placeholder.nextSibling); //appendChild(iframe);
+        placeholder.style.display = 'none';
+    });
+    // subscribe button listener mouse
+    document.querySelectorAll('.info-container div')[index].addEventListener('click', function (e) {
+        if (_config2.default.isAuthenticate) {
+            document.head.removeChild(document.querySelector('#api'));
+
+            e.target.classList.add('g-ytsubscribe');
+            e.target.setAttribute('data-layout', 'full');
+            e.target.setAttribute('data-count', 'default');
+            e.target.setAttribute('data-theme', 'dark');
+
+            var script = document.createElement('script');
+            script.setAttribute('id', 'api');
+            script.setAttribute('src', 'https://apis.google.com/js/platform.js');
+            document.head.appendChild(script);
+        } else _config2.default.showInfo('Authenticate first please!');
+    });
+
+    // subscribe button listener touch
+    document.querySelectorAll('.info-container div')[index].addEventListener('touchstart', function (e) {
+        if (_config2.default.isAuthenticate) {
+            document.head.removeChild(document.querySelector('#api'));
+
+            e.target.classList.add('g-ytsubscribe');
+            e.target.setAttribute('data-layout', 'full');
+            e.target.setAttribute('data-count', 'default');
+            e.target.setAttribute('data-theme', 'dark');
+
+            var script = document.createElement('script');
+            script.setAttribute('id', 'api');
+            script.setAttribute('src', 'https://apis.google.com/js/platform.js');
+            document.head.appendChild(script);
+        } else _config2.default.showInfo('Authenticate first please!');
+    });
+}
 
 /***/ }),
 /* 2 */
@@ -361,6 +433,8 @@ var _config = __webpack_require__(0);
 
 var _config2 = _interopRequireDefault(_config);
 
+var _listeners = __webpack_require__(1);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -368,10 +442,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Request = function () {
     function Request() {
         _classCallCheck(this, Request);
-
-        Request.apiKey = 'AIzaSyA17KYHw-TfsiBy3TdT8hThejNcLjdNnOo';
-        this.counter = 1;
-        this.isRemoved = false;
     }
 
     _createClass(Request, [{
@@ -380,7 +450,7 @@ var Request = function () {
             this.searchText = document.querySelector('#search').value;
             document.querySelector('#search').value = '';
             document.querySelector('#search').setAttribute('placeholder', this.searchText);
-            var url = 'https://www.googleapis.com/youtube/v3/search?key=' + Request.apiKey + '&type=video&part=snippet&maxResults=' + 15 /*videosCount*/ + '&q=' + this.searchText;
+            var url = 'https://www.googleapis.com/youtube/v3/search?key=' + _config2.default.apiKey + '&type=video&part=snippet&maxResults=' + _config2.default.requestCount + '&q=' + this.searchText;
 
             Request.openXHRRequest(url).then(function (response) {
                 return Request.onSearchResponse(response);
@@ -392,14 +462,29 @@ var Request = function () {
         key: 'newRequest',
         value: function newRequest() {
             _config2.default.pageNumber += Math.round(15 / _config2.default.videosCount);
-            // alert(config.pageNumber);
-            var url = 'https://www.googleapis.com/youtube/v3/search?key=' + Request.apiKey + '&type=video&part=snippet&maxResults=' + 15 + '&pageToken=' + Request.nextPageToken + '&q=' + this.searchText;
+            var url = 'https://www.googleapis.com/youtube/v3/search?key=' + _config2.default.apiKey + '&type=video&part=snippet&maxResults=' + _config2.default.requestCount + '&pageToken=' + Request.nextPageToken + '&q=' + this.searchText;
             Request.openXHRRequest(url).then(function (response) {
                 return Request.onSearchResponse(response);
             }, function (error) {
                 return alert('Rejected: ' + error);
             });
         }
+
+        // static addListenerPlay(response, index, videoID) {// in progress
+        //     document.querySelectorAll('.play')[index].addEventListener('click', e => {
+
+        //         let component = document.querySelectorAll('.component')[index];
+        //         let placeholder = component.children[1];
+        //         let iframe = document.createElement('iframe');
+        //         iframe.setAttribute('width', '350px');
+        //         iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoID + '?autoplay=1');
+        //         iframe.setAttribute('allowfullscreen', '');
+        //         placeholder.parentNode.insertBefore(iframe, placeholder.nextSibling);//appendChild(iframe);
+        //         placeholder.style.display = 'none';
+
+        //     });
+        // }
+
     }], [{
         key: 'openXHRRequest',
         value: function openXHRRequest(url) {
@@ -426,8 +511,7 @@ var Request = function () {
     }, {
         key: 'onSearchResponse',
         value: function onSearchResponse(response) {
-            // let index = 0;
-            var videoIDs = '';
+
             response = JSON.parse(response);
             if (!_config2.default.isRemoved) {
                 document.head.removeChild(document.querySelector('#api'));
@@ -435,9 +519,7 @@ var Request = function () {
             }
 
             // if search result not found show nothing
-            if (response.items.length !== 0) {
-                // Request.searchResult = true;
-            } else {
+            if (!response.items) {
                 // Request.searchResult = false;
                 var wrapper = document.querySelector('.wrapper');
                 var pages = document.querySelector('#pages');
@@ -451,28 +533,23 @@ var Request = function () {
 
             //------------------------------------------- show info about response ----------------------------------
             _config2.default.showInfo('Response success. Found about ' + response.pageInfo.totalResults + ' videos');
-
             //-------------------------------------------------------------------------------------------------------
 
-
+            var videoIDs = '';
             for (var i = 0; i < response.items.length; i++) {
                 var index = _config2.default.videosCount * _config2.default.pageNumber + i;
                 var videoID = response.items[i].id.videoId;
                 var switcher = 1;
                 i !== response.items.length - 1 ? videoIDs += videoID + ',' : videoIDs += videoID;
-                // if (i !== response.items.length - 1) {
-                //     videoIDs += ',';
-                // }
+
                 document.querySelectorAll('#title')[index].innerHTML = response.items[i].snippet.title;
                 document.querySelectorAll('#title')[index].setAttribute('href', 'http://www.youtube.com/watch?v=' + videoID);
                 document.querySelectorAll('#description')[index].innerHTML = response.items[i].snippet.description;
                 document.querySelectorAll('#date')[index].innerHTML = response.items[i].snippet.publishedAt.slice(0, 10);
                 document.querySelectorAll('#author')[index].innerHTML = response.items[i].snippet.channelTitle;
                 document.querySelectorAll('.preview')[index].setAttribute('src', response.items[i].snippet.thumbnails.high.url);
-                Request.addListenerPlay(response, index, videoID);
-                // let subscr = document.querySelectorAll('.g-ytsubscribe')[index];
                 document.querySelectorAll('.info-container div')[index].setAttribute('data-channel', response.items[i].snippet.channelTitle);
-                // subscr.classList.add('btn-subscr');
+                (0, _listeners.addListenersAfterResponse)(response, index, videoID);
 
                 if (_config2.default.isRemoved) {
                     var script = document.createElement('script');
@@ -481,10 +558,11 @@ var Request = function () {
                     document.head.appendChild(script);
                     _config2.default.isRemoved = false;
                 }
+
                 index++;
             }
 
-            var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + this.apiKey + '&id=' + videoIDs + '&part=snippet,statistics';
+            var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + _config2.default.apiKey + '&id=' + videoIDs + '&part=snippet,statistics';
             Request.openXHRRequest(url).then(function (response) {
                 response = JSON.parse(response);
                 for (var _i = 0; _i < response.items.length; _i++) {
@@ -495,38 +573,89 @@ var Request = function () {
             }); // load viewscount	
             this.nextPageToken = response.nextPageToken;
         }
-    }, {
-        key: 'addListenerPlay',
-        value: function addListenerPlay(response, index, videoID) {
-            // in progress
-            document.querySelectorAll('.play')[index].addEventListener('click', function (e) {
-                // alert(`im button ${index}`);
-                // document.querySelectorAll('.play')[index];
-                var component = document.querySelectorAll('.component')[index];
-                var placeholder = component.children[1];
-
-                var iframe = document.createElement('iframe');
-                iframe.setAttribute('width', '350px');
-                iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoID + '?autoplay=1');
-                iframe.setAttribute('allowfullscreen', '');
-
-                placeholder.parentNode.insertBefore(iframe, placeholder.nextSibling); //appendChild(iframe);
-                // div.parentNode.insertBefore(div2, div.nextSibling);
-                placeholder.style.display = 'none';
-            });
-        }
     }]);
 
     return Request;
 }();
 
-// <iframe width="560" height="315" src="https://www.youtube.com/embed/UBfsS1EGyWc" frameborder="0" allowfullscreen></iframe>
-
-
 exports.default = Request;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _render = __webpack_require__(5);
+
+var _render2 = _interopRequireDefault(_render);
+
+var _listeners = __webpack_require__(1);
+
+var _listeners2 = _interopRequireDefault(_listeners);
+
+var _request = __webpack_require__(2);
+
+var _request2 = _interopRequireDefault(_request);
+
+var _resize = __webpack_require__(7);
+
+var _resize2 = _interopRequireDefault(_resize);
+
+var _renderGA = __webpack_require__(6);
+
+var _renderGA2 = _interopRequireDefault(_renderGA);
+
+var _config = __webpack_require__(0);
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Main = function Main() {
+	_classCallCheck(this, Main);
+
+	this.GASection = new _renderGA2.default();
+	this.render = new _render2.default();
+	this.request = new _request2.default();
+	this.listeners = new _listeners2.default();
+	this.resize = new _resize2.default();
+};
+
+exports.default = Main;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _main = __webpack_require__(3);
+
+var _main2 = _interopRequireDefault(_main);
+
+var _config = __webpack_require__(0);
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_config2.default.chooseVideosCount();
+var main = new _main2.default();
+main.render.renderPage();
+main.listeners.addListeners(main);
+main.GASection.requestOAuth();
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -609,7 +738,7 @@ var Render = function () {
             nick.classList.add('nickname');
             email.classList.add('email');
             auth.classList.add('auth');
-            auth.innerHTML = 'AUTHORIZATION';
+            auth.innerHTML = 'AUTHENTICATION';
             hider.appendChild(avatar);
             hider.appendChild(nick);
             hider.appendChild(email);
@@ -683,7 +812,10 @@ var Render = function () {
             var divComponent = document.createElement('div');
             var componentHeader = document.createElement('div');
             var previewPlaceholder = document.createElement('div');
+
             var infoContainer = document.createElement('div');
+            // let overSubscr = document.createElement('button');
+
             var a = document.createElement('a');
             // let iframe = document.createElement('iframe');
             var preview = document.createElement('img');
@@ -728,11 +860,14 @@ var Render = function () {
 
             infoContainer.classList.add('info-container');
 
-            subscr.classList.add('g-ytsubscribe' /*, 'btn-subscr'*/);
-            subscr.setAttribute('data-layout', 'full');
-            subscr.setAttribute('data-count', 'default');
-            subscr.setAttribute('data-theme', 'dark');
+            // overSubscr.classList.add('over-subscribe');
+            subscr.innerHTML = 'SUBSCRIBE';
+            // subscr.classList.add('g-ytsubscribe'/*, 'btn-subscr'*/);
+            // subscr.setAttribute('data-layout', 'full');
+            // subscr.setAttribute('data-count', 'default');
+            // subscr.setAttribute('data-theme', 'dark');
             infoContainer.appendChild(subscr);
+            // infoContainer.appendChild(overSubscr);
 
             // info below iframe
             ul.setAttribute('id', 'info');
@@ -795,7 +930,7 @@ var Render = function () {
                     }
                     slides[slides.length - 1].style.left = left + 'px'; // apply position to new slide
                 }
-                _listeners2.default.slidePos.push(parseInt(slides[slides.length - 1].style.left)); // add new slide pos to all positions
+                _config2.default.slidePos.push(parseInt(slides[slides.length - 1].style.left)); // add new slide pos to all positions
                 first = false;
             }
         }
@@ -805,161 +940,6 @@ var Render = function () {
 }();
 
 exports.default = Render;
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _render = __webpack_require__(3);
-
-var _render2 = _interopRequireDefault(_render);
-
-var _listeners = __webpack_require__(1);
-
-var _listeners2 = _interopRequireDefault(_listeners);
-
-var _request = __webpack_require__(2);
-
-var _request2 = _interopRequireDefault(_request);
-
-var _resize = __webpack_require__(7);
-
-var _resize2 = _interopRequireDefault(_resize);
-
-var _renderGA = __webpack_require__(6);
-
-var _renderGA2 = _interopRequireDefault(_renderGA);
-
-var _config = __webpack_require__(0);
-
-var _config2 = _interopRequireDefault(_config);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Main = function () {
-    function Main() {
-        _classCallCheck(this, Main);
-
-        this.GASection = new _renderGA2.default();
-        this.render = new _render2.default();
-        this.request = new _request2.default();
-        this.listeners = new _listeners2.default();
-        this.resize = new _resize2.default(this);
-        this.newSearch = false;
-    }
-
-    _createClass(Main, [{
-        key: 'chooseVideosCount',
-        value: function chooseVideosCount() {
-            if (window.innerWidth > 1250) {
-                _config2.default.videosCount = 3;
-            } else if (window.innerWidth > 930) {
-                _config2.default.videosCount = 2;
-            } else {
-                _config2.default.videosCount = 1;
-            }
-        }
-    }, {
-        key: 'addSearchListeners',
-        value: function addSearchListeners(main) {
-            //--------------------------------------- event listener for 'Enter' key --------------------------------
-            document.querySelector('#search').addEventListener('keypress', function (e) {
-                if (e.keyCode === 13 && this.value) {
-                    document.title = this.value;
-                    _listeners2.default.slidePos = [0];
-                    main.chooseVideosCount();
-                    if (main.newSearch) {
-                        _config2.default.reset();
-                        var wrapper = document.querySelector('.wrapper');
-                        var pages = document.querySelector('#pages');
-                        while (wrapper.firstChild) {
-                            wrapper.removeChild(wrapper.firstChild);
-                        }while (pages.firstChild) {
-                            pages.removeChild(pages.firstChild);
-                        }
-                    }
-                    main.newSearch = true;
-                    main.render.addNewSlide(true, null, null);
-                    main.request.initialization(main);
-                    _listeners2.default.currentPage = 0;
-                } else if (e.keyCode === 13 && !this.value) {
-                    showInfo('please enter search keyword');
-                }
-            });
-            //------------------------------------- event listener for SEARCH button -------------------------------
-            document.querySelector('.btn-search').addEventListener('click', function (e) {
-                if (document.querySelector('#search').value) {
-                    document.title = document.querySelector('#search').value;
-                    _listeners2.default.slidePos = [0];
-                    main.chooseVideosCount();
-                    if (main.newSearch) {
-                        _config2.default.reset();
-                        var wrapper = document.querySelector('.wrapper');
-                        var pages = document.querySelector('#pages');
-                        while (wrapper.firstChild) {
-                            wrapper.removeChild(wrapper.firstChild);
-                        }while (pages.firstChild) {
-                            pages.removeChild(pages.firstChild);
-                        }
-                    }
-                    main.newSearch = true;
-                    main.render.addNewSlide(true, null, null);
-                    main.request.initialization(main);
-                    _listeners2.default.currentPage = 0;
-                } else showInfo('please enter search keyword');
-            });
-        }
-    }]);
-
-    return Main;
-}();
-
-exports.default = Main;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _main = __webpack_require__(4);
-
-var _main2 = _interopRequireDefault(_main);
-
-var _config = __webpack_require__(0);
-
-var _config2 = _interopRequireDefault(_config);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// window.showInfo = function (message){
-//     document.querySelector('#auth-status').style.opacity = '1';
-//     document.querySelector('#auth-status').innerHTML = message;
-//     setTimeout(decreaseOpacity, 5000);
-// }
-
-// function decreaseOpacity(){
-//     document.querySelector('#auth-status').style.opacity = '0';
-// }
-
-
-var main = new _main2.default();
-main.render.renderPage();
-main.listeners.addListeners(main.render, main.request);
-main.addSearchListeners(main);
-main.GASection.requestOAuth();
 
 /***/ }),
 /* 6 */
@@ -1056,16 +1036,17 @@ var GASection = function () {
                 var isAuthorized = user.hasGrantedScopes(SCOPE);
                 if (isAuthorized) {
                     GASection.setInfo(user); // fill info user panel...
-
                     document.querySelector('.auth-section div').style.display = 'block';
                     document.querySelector('#sign-in-or-out-button').innerHTML = 'Sign out';
                     document.querySelector('#revoke-access-button').style.display = 'inline-block';
                     _config2.default.showInfo('You are currently signed in and have granted access to this app.');
+                    _config2.default.isAuthenticate = true; // this need for subscribe button 
                 } else {
                     document.querySelector('.auth-section div').style.display = 'none';
                     document.querySelector('#sign-in-or-out-button').innerHTML = 'Sign In';
                     document.querySelector('#revoke-access-button').style.display = 'none';
                     _config2.default.showInfo('You have not authorized this app or you are signed out.');
+                    _config2.default.isAuthenticate = false; // this need for subscribe button 
                 }
             }
 
@@ -1101,19 +1082,10 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // import Request from './request';
+// import Render from './render';
+// import Listeners from './listeners';
 
-var _request = __webpack_require__(2);
-
-var _request2 = _interopRequireDefault(_request);
-
-var _render = __webpack_require__(3);
-
-var _render2 = _interopRequireDefault(_render);
-
-var _listeners = __webpack_require__(1);
-
-var _listeners2 = _interopRequireDefault(_listeners);
 
 var _config = __webpack_require__(0);
 
@@ -1124,33 +1096,34 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Resize = function () {
-	function Resize(Request) {
+	function Resize() {
 		_classCallCheck(this, Resize);
 
-		// Resize.render = new Render();
 		window.onresize = function () {
-			if (document.querySelector('.wrapper').innerHTML !== '') {
-				var videosCount = _config2.default.videosCount;
+			// if (document.querySelector('.wrapper').innerHTML !== '') {
 
-				if (window.innerWidth > 1250) {
-					if (_config2.default.videosCount !== 3) {
-						_config2.default.videosCount = 3;
-						Resize.rerendering(3, videosCount);
-					}
-				} else if (window.innerWidth > 930) {
-					if (_config2.default.videosCount !== 2) {
-						_config2.default.videosCount = 2;
-						Resize.rerendering(2, videosCount);
-					}
-				} else if (window.innerWidth < 930) {
-					if (_config2.default.videosCount !== 1) {
-						_config2.default.videosCount = 1;
-						Resize.rerendering(1, videosCount);
-					}
+			if (window.innerWidth > 1250) {
+				if (_config2.default.videosCount !== 3 && document.querySelector('.wrapper').innerHTML !== '') {
+					_config2.default.videosCount = 3;
+					Resize.rerendering(3, _config2.default.videosCount);
 				}
-
-				Resize.changeSlidesPosition();
+				document.querySelector('.logo').style.display = 'block';
+			} else if (window.innerWidth > 930) {
+				if (_config2.default.videosCount !== 2 && document.querySelector('.wrapper').innerHTML !== '') {
+					_config2.default.videosCount = 2;
+					Resize.rerendering(2, _config2.default.videosCount);
+				}
+				document.querySelector('.logo').style.display = 'block';
+			} else if (window.innerWidth < 930) {
+				if (_config2.default.videosCount !== 1 && document.querySelector('.wrapper').innerHTML !== '') {
+					_config2.default.videosCount = 1;
+					Resize.rerendering(1, _config2.default.videosCount);
+				}
+				document.querySelector('.logo').style.display = 'none';
 			}
+
+			Resize.changeSlidesPosition();
+			// }
 		};
 	}
 
@@ -1158,12 +1131,12 @@ var Resize = function () {
 		key: 'changeSlidesPosition',
 		value: function changeSlidesPosition() {
 			var width = window.innerWidth;
-			var leftPos = -1 * _listeners2.default.currentPage * width;
+			var leftPos = -1 * _config2.default.currentPage * width;
 			var slides = document.querySelectorAll('.slide');
-			_listeners2.default.slidePos = [];
+			_config2.default.slidePos = [];
 
 			for (var i = 0; i < slides.length; i++) {
-				_listeners2.default.slidePos.push(leftPos);
+				_config2.default.slidePos.push(leftPos);
 				slides[i].style.left = leftPos + 'px';
 				leftPos += width;
 			}
@@ -1179,17 +1152,17 @@ var Resize = function () {
 			components.reverse();
 			document.querySelector('.wrapper').innerHTML = '';
 			document.querySelector('#pages').innerHTML = '';
-			_listeners2.default.slidePos = [];
-			_request2.default.pageNumber = -1;
+			_config2.default.slidePos = [];
+			_config2.default.pageNumber = -1;
 
 			for (var i = 0; i < Math.floor(length); i++) {
 				var sectionSlide = document.createElement('section');
 				var page = document.createElement('li');
 
-				_request2.default.pageNumber++;
+				_config2.default.pageNumber++;
 				sectionSlide.className = 'slide';
 				sectionSlide.setAttribute('style', 'left:' + offset + 'px');
-				_listeners2.default.slidePos.push(offset);
+				_config2.default.slidePos.push(offset);
 				for (var j = 0; j < count; j++) {
 					if (components.length) {
 						sectionSlide.appendChild(components[components.length - 1]);
@@ -1205,7 +1178,7 @@ var Resize = function () {
 
 			document.querySelector('.wrapper').appendChild(docFragment);
 
-			var targetIndex = Math.floor(previousCount * _listeners2.default.currentPage / count);
+			var targetIndex = Math.floor(previousCount * _config2.default.currentPage / count);
 			document.querySelectorAll('#pages li')[targetIndex].click();
 			if (!targetIndex) {
 				setTimeout(function () {

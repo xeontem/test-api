@@ -5,6 +5,11 @@ body {
 	margin: 0;
     padding: 20px;
     font-family: "Source Sans Pro", sans-serif;
+    background: red; /* For browsers that do not support gradients */
+    background: -webkit-linear-gradient(bottom, white, #2f2f2f); /*Safari 5.1-6*/
+    background: -o-linear-gradient(bottom, white, #2f2f2f); /*Opera 11.1-12*/
+    background: -moz-linear-gradient(bottom, white, #2f2f2f); /*Fx 3.6-15*/
+    background: linear-gradient(to bottom, white, #2f2f2f); /*Standard*/
 }
 
 body, li {
@@ -54,6 +59,11 @@ a {
 .auth-section {
 	position: relative;
 	height: 75px;
+}
+
+.auth-section > :last-child {
+    position: absolute;
+    top: 90px;
 }
 
 #auth-status {
@@ -211,11 +221,20 @@ a {
     overflow: hidden;
 }
 
+/*subscribe section*/
 .info-container div{
     position: absolute;
+    padding: 10px 0px;
+    width: 172px;
     right: 15px;
     bottom: 120px;
     z-index: 100;
+    border: none;
+    background: #2f2f2f;
+    font-size: 16pt;
+    color: white;
+    cursor: pointer;
+    letter-spacing: 2px;
 }
 
 #info {
