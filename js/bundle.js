@@ -77,9 +77,11 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.default = {
+    mobile: false,
+    countRequests: -1,
     isAuthenticate: false,
     apiKey: 'AIzaSyA17KYHw-TfsiBy3TdT8hThejNcLjdNnOo',
-    videoCount: 1,
+    videosCount: 1,
     requestCount: 15,
     pageNumber: 0,
     isRemoved: false,
@@ -99,12 +101,19 @@ exports.default = {
         document.querySelector('#auth-status').style.opacity = '0';
     },
     chooseVideosCount: function chooseVideosCount() {
-        if (window.innerWidth > 1250) {
-            this.videosCount = 3;
-        } else if (window.innerWidth > 930) {
-            this.videosCount = 2;
+        // alert(navigator.userAgent.match(/Windows/i));
+        if (!navigator.userAgent.match(/Windows/i)) {
+            this.mobile = true;
+            this.videoCount = 1;
         } else {
-            this.videosCount = 1;
+            // this.showInfo('Desktop version');
+            if (window.innerWidth > 1250) {
+                this.videosCount = 3;
+            } else if (window.innerWidth > 930) {
+                this.videosCount = 2;
+            } else {
+                this.videosCount = 1;
+            }
         }
     }
 };
@@ -162,7 +171,7 @@ var Listeners = function () {
                     main.request.initialization(main);
                     _config2.default.currentPage = 0;
                 } else if (e.keyCode === 13 && !this.value) {
-                    showInfo('please enter search keyword');
+                    _config2.default.showInfo('please enter search keyword');
                 }
             });
             //------------------------------------- event listener for SEARCH button -------------------------------
@@ -184,7 +193,7 @@ var Listeners = function () {
                     main.render.addNewSlide(true, null, null);
                     main.request.initialization(main);
                     _config2.default.currentPage = 0;
-                } else showInfo('please enter search keyword');
+                } else _config2.default.showInfo('please enter search keyword');
             });
 
             //authorization button listener
@@ -274,6 +283,9 @@ var Listeners = function () {
     }, {
         key: 'slideMove',
         value: function slideMove(e, isTouchEvent, render, request) {
+            // alert(window.screen.availWidth);
+            var scrollSize = window.innerWidth;
+            if (_config2.default.mobile) scrollSize = window.screen.availWidth;
             if (isTouchEvent) {
                 this.deltaX = e.changedTouches[0].clientX - this.pointX;
                 this.pointX = e.changedTouches[0].clientX;
@@ -296,17 +308,17 @@ var Listeners = function () {
                     } else {
                         x = Math.abs(e.pageX - this.startX);
                     }
-                    if (x > window.innerWidth / 3) {
+                    if (x > scrollSize / 3) {
                         this.isTouch = false;
                         var isMoveFirstSlide = false;
                         if (parseInt(allSlides[i].style.left) > _config2.default.slidePos[i]) {
                             isMoveFirstSlide = true;
-                            offset = _config2.default.slidePos[i] + window.innerWidth;
+                            offset = _config2.default.slidePos[i] + scrollSize;
                         } else {
-                            offset = _config2.default.slidePos[i] - window.innerWidth;
+                            offset = _config2.default.slidePos[i] - scrollSize;
                         }
                         if (isMoveFirstSlide && _config2.default.slidePos[0] === 0) {
-                            offset -= window.innerWidth;
+                            offset -= scrollSize;
                         }
                     }
                     allSlides[i].style.left = offset + 'px';
@@ -511,12 +523,12 @@ var Request = function () {
     }, {
         key: 'onSearchResponse',
         value: function onSearchResponse(response) {
-
+            _config2.default.countRequests++;
             response = JSON.parse(response);
-            if (!_config2.default.isRemoved) {
-                document.head.removeChild(document.querySelector('#api'));
-                _config2.default.isRemoved = true;
-            }
+            // if(!config.isRemoved){
+            //     document.head.removeChild(document.querySelector('#api'));
+            //     config.isRemoved = true;
+            // }
 
             // if search result not found show nothing
             if (!response.items) {
@@ -525,9 +537,11 @@ var Request = function () {
                 var pages = document.querySelector('#pages');
                 while (wrapper.firstChild) {
                     wrapper.removeChild(wrapper.firstChild);
-                }while (pages.firstChild) {
+                } // because https://jsperf.com/innerhtml-vs-removechild
+                while (pages.firstChild) {
                     pages.removeChild(pages.firstChild);
-                }_config2.default.showInfo('Response failed. Found nothing');
+                } // because https://jsperf.com/innerhtml-vs-removechild
+                _config2.default.showInfo('Response failed. Found nothing');
                 return;
             }
 
@@ -537,6 +551,7 @@ var Request = function () {
 
             var videoIDs = '';
             for (var i = 0; i < response.items.length; i++) {
+                console.log('config.videosCount: ' + _config2.default.videosCount + ' | config.pageNumber: ' + _config2.default.pageNumber);
                 var index = _config2.default.videosCount * _config2.default.pageNumber + i;
                 var videoID = response.items[i].id.videoId;
                 var switcher = 1;
@@ -551,13 +566,13 @@ var Request = function () {
                 document.querySelectorAll('.info-container div')[index].setAttribute('data-channel', response.items[i].snippet.channelTitle);
                 (0, _listeners.addListenersAfterResponse)(response, index, videoID);
 
-                if (_config2.default.isRemoved) {
-                    var script = document.createElement('script');
-                    script.setAttribute('id', 'api');
-                    script.setAttribute('src', 'https://apis.google.com/js/platform.js');
-                    document.head.appendChild(script);
-                    _config2.default.isRemoved = false;
-                }
+                // if(config.isRemoved){
+                //     let script = document.createElement('script');
+                //     script.setAttribute('id', 'api');
+                //     script.setAttribute('src', 'https://apis.google.com/js/platform.js')
+                //     document.head.appendChild(script);
+                //     config.isRemoved = false;
+                // }
 
                 index++;
             }
@@ -777,7 +792,7 @@ var Render = function () {
             searchButton.innerHTML = 'SEARCH';
             // input.setAttribute('type', 'text');
             input.setAttribute('id', 'search');
-            input.setAttribute('autofocus', '');
+            //input.setAttribute('autofocus', '');
             // create logo
             img.classList.add('logo-image');
             img.setAttribute('src', './img/logo.png');
@@ -920,7 +935,9 @@ var Render = function () {
                 slides = document.querySelectorAll('.slide');
                 if (first) document.querySelector('#pages li').className = 'active';else {
                     var parse = parseInt(slides[slides.length - 2].style.left);
-                    var left = parse /*Int(slides[slides.length-1].style.left)*/ + window.innerWidth; // calculate position to new slide
+                    var left = parse + window.innerWidth;
+                    //if(config.mobile) left = parse  + window.screen.availWidth;// calculate position to new slide
+                    //else left = parse + window.innerWidth;// calculate position to new slide
                     if (nextToken) {
                         if (fromSlide) {
                             left = window.innerWidth * 2;
@@ -1079,13 +1096,10 @@ exports.default = GASection;
 
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // import Request from './request';
-// import Render from './render';
-// import Listeners from './listeners';
-
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _config = __webpack_require__(0);
 
@@ -1096,100 +1110,114 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Resize = function () {
-	function Resize() {
-		_classCallCheck(this, Resize);
+  function Resize() {
+    _classCallCheck(this, Resize);
 
-		window.onresize = function () {
-			// if (document.querySelector('.wrapper').innerHTML !== '') {
+    window.onresize = function () {
+      if (!navigator.userAgent.match(/Windows/i)) {
+        _config2.default.showInfo('Mobile version');
+        _config2.default.mobile = true;
+        _config2.default.videosCount = 1;
+      } else {
+        _config2.default.showInfo('Desktop version');
+        if (window.innerWidth > 1250) {
+          if (_config2.default.videosCount !== 3) {
+            if (document.querySelector('.wrapper').innerHTML) Resize.rerendering(3, _config2.default.videosCount);
+            _config2.default.videosCount = 3;
+          }
+          document.querySelector('.logo').style.display = 'block';
+        } else if (window.innerWidth > 930) {
+          if (_config2.default.videosCount !== 2) {
+            if (document.querySelector('.wrapper').innerHTML) Resize.rerendering(2, _config2.default.videosCount);
+            _config2.default.videosCount = 2;
+          }
+          document.querySelector('.logo').style.display = 'block';
+        } else if (window.innerWidth < 930) {
+          if (_config2.default.videosCount !== 1) {
+            if (document.querySelector('.wrapper').innerHTML) Resize.rerendering(1, _config2.default.videosCount);
+            _config2.default.videosCount = 1;
+          }
+          document.querySelector('.logo').style.display = 'none';
+        }
+      }
+      Resize.changeSlidesPosition();
+    };
+  }
 
-			if (window.innerWidth > 1250) {
-				if (_config2.default.videosCount !== 3 && document.querySelector('.wrapper').innerHTML !== '') {
-					_config2.default.videosCount = 3;
-					Resize.rerendering(3, _config2.default.videosCount);
-				}
-				document.querySelector('.logo').style.display = 'block';
-			} else if (window.innerWidth > 930) {
-				if (_config2.default.videosCount !== 2 && document.querySelector('.wrapper').innerHTML !== '') {
-					_config2.default.videosCount = 2;
-					Resize.rerendering(2, _config2.default.videosCount);
-				}
-				document.querySelector('.logo').style.display = 'block';
-			} else if (window.innerWidth < 930) {
-				if (_config2.default.videosCount !== 1 && document.querySelector('.wrapper').innerHTML !== '') {
-					_config2.default.videosCount = 1;
-					Resize.rerendering(1, _config2.default.videosCount);
-				}
-				document.querySelector('.logo').style.display = 'none';
-			}
+  _createClass(Resize, null, [{
+    key: 'changeSlidesPosition',
+    value: function changeSlidesPosition() {
+      var width = window.innerWidth;
+      var leftPos = -1 * _config2.default.currentPage * width;
+      var slides = document.querySelectorAll('.slide');
+      _config2.default.slidePos = [];
 
-			Resize.changeSlidesPosition();
-			// }
-		};
-	}
+      for (var i = 0; i < slides.length; i++) {
+        _config2.default.slidePos.push(leftPos);
+        slides[i].style.left = leftPos + 'px';
+        leftPos += width;
+      }
+    }
+  }, {
+    key: 'rerendering',
+    value: function rerendering(count, previousCount) {
+      _config2.default.showInfo('Resizing...');
 
-	_createClass(Resize, null, [{
-		key: 'changeSlidesPosition',
-		value: function changeSlidesPosition() {
-			var width = window.innerWidth;
-			var leftPos = -1 * _config2.default.currentPage * width;
-			var slides = document.querySelectorAll('.slide');
-			_config2.default.slidePos = [];
+      var components = Array.from(document.querySelectorAll('.component')).reverse();
+      var docFragment = document.createDocumentFragment();
+      var offset = 0;
+      var length = Math.round(components.length / count);
 
-			for (var i = 0; i < slides.length; i++) {
-				_config2.default.slidePos.push(leftPos);
-				slides[i].style.left = leftPos + 'px';
-				leftPos += width;
-			}
-		}
-	}, {
-		key: 'rerendering',
-		value: function rerendering(count, previousCount) {
-			var components = Array.from(document.querySelectorAll('.component'));
-			var docFragment = document.createDocumentFragment();
-			var offset = 0;
-			var length = components.length / count;
+      // components.reverse();
 
-			components.reverse();
-			document.querySelector('.wrapper').innerHTML = '';
-			document.querySelector('#pages').innerHTML = '';
-			_config2.default.slidePos = [];
-			_config2.default.pageNumber = -1;
+      var wrapper = document.querySelector('.wrapper');
+      var pages = document.querySelector('#pages');
+      while (wrapper.firstChild) {
+        wrapper.removeChild(wrapper.firstChild);
+      } // because https://jsperf.com/innerhtml-vs-removechild
+      while (pages.firstChild) {
+        pages.removeChild(pages.firstChild);
+      } // because https://jsperf.com/innerhtml-vs-removechild
 
-			for (var i = 0; i < Math.floor(length); i++) {
-				var sectionSlide = document.createElement('section');
-				var page = document.createElement('li');
+      _config2.default.slidePos = [];
+      // console.log(config.pageNumber);
+      _config2.default.pageNumber = Math.round(_config2.default.countRequests * 15 / count); // -1
+      console.log('After resize config.pageNumber: ' + _config2.default.pageNumber);
 
-				_config2.default.pageNumber++;
-				sectionSlide.className = 'slide';
-				sectionSlide.setAttribute('style', 'left:' + offset + 'px');
-				_config2.default.slidePos.push(offset);
-				for (var j = 0; j < count; j++) {
-					if (components.length) {
-						sectionSlide.appendChild(components[components.length - 1]);
-						components.pop();
-					}
-				}
-				offset += window.innerWidth;
-				docFragment.appendChild(sectionSlide);
+      for (var i = 0; i < length; i++) {
+        var sectionSlide = document.createElement('section');
+        var page = document.createElement('li');
 
-				page.innerHTML = i + 1;
-				document.querySelector('#pages').appendChild(page);
-			}
+        // config.pageNumber++;
+        console.log(_config2.default.pageNumber);
+        sectionSlide.classList.add('slide');
+        sectionSlide.setAttribute('style', 'left:' + offset + 'px');
+        _config2.default.slidePos.push(offset);
 
-			document.querySelector('.wrapper').appendChild(docFragment);
+        for (var j = 0; j < count; j++) {
+          if (components.length) sectionSlide.appendChild(components.pop());
+        }
 
-			var targetIndex = Math.floor(previousCount * _config2.default.currentPage / count);
-			document.querySelectorAll('#pages li')[targetIndex].click();
-			if (!targetIndex) {
-				setTimeout(function () {
-					document.querySelectorAll('#pages li')[targetIndex].click();
-				}, 0);
-				document.querySelector('#pages li').className = 'active';
-			}
-		}
-	}]);
+        offset += window.innerWidth;
+        docFragment.appendChild(sectionSlide);
+        page.innerHTML = i + 1;
+        document.querySelector('#pages').appendChild(page);
+      }
 
-	return Resize;
+      document.querySelector('.wrapper').appendChild(docFragment);
+
+      var targetIndex = Math.floor(previousCount * _config2.default.currentPage / count);
+      document.querySelectorAll('#pages li')[targetIndex].click();
+      if (!targetIndex) {
+        setTimeout(function () {
+          document.querySelectorAll('#pages li')[targetIndex].click();
+        }, 0);
+        document.querySelector('#pages li').className = 'active';
+      }
+    }
+  }]);
+
+  return Resize;
 }();
 
 exports.default = Resize;
