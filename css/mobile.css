@@ -94,9 +94,10 @@ a {
 
 .btn {
     position: absolute;
-    right: 110px;
-    top: 40px;
-    height: 29px;
+    right: 8%;
+    top: 31px;
+    height: 50px;
+    padding: 0px 25px;
     color: white;
     background: red;
     border: 1px solid #2f2f2f;
@@ -106,7 +107,7 @@ a {
 }
 
 .btn-login {
-	right: 230px;
+	right: 30%;
 }
 
 .btn:hover {

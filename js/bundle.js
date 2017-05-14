@@ -101,12 +101,7 @@ exports.default = {
         document.querySelector('#auth-status').style.opacity = '0';
     },
     chooseVideosCount: function chooseVideosCount() {
-        // alert(navigator.userAgent.match(/Windows/i));
-        if (!navigator.userAgent.match(/Windows/i)) {
-            this.mobile = true;
-            this.videoCount = 1;
-        } else {
-            // this.showInfo('Desktop version');
+        if (this.mobile) this.videoCount = 1;else {
             if (window.innerWidth > 1250) {
                 this.videosCount = 3;
             } else if (window.innerWidth > 930) {
@@ -115,6 +110,15 @@ exports.default = {
                 this.videosCount = 1;
             }
         }
+    },
+    checkMobile: function checkMobile() {
+        if (window.orientation !== undefined) this.mobile = true;
+
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'stylesheet');
+        link.setAttribute('type', 'text/css');
+        if (this.mobile) link.setAttribute('href', 'css/mobile.css');else link.setAttribute('href', 'css/desktop.css');
+        document.head.appendChild(link);
     }
 };
 
@@ -175,26 +179,28 @@ var Listeners = function () {
                 }
             });
             //------------------------------------- event listener for SEARCH button -------------------------------
-            document.querySelector('.btn-search').addEventListener('click', function (e) {
-                if (document.querySelector('#search').value) {
-                    document.title = document.querySelector('#search').value.toUpperCase();
-                    _config2.default.slidePos = [0];
-                    if (main.newSearch) {
-                        _config2.default.reset();
-                        var wrapper = document.querySelector('.wrapper');
-                        var pages = document.querySelector('#pages');
-                        while (wrapper.firstChild) {
-                            wrapper.removeChild(wrapper.firstChild);
-                        }while (pages.firstChild) {
-                            pages.removeChild(pages.firstChild);
+            if (!_config2.default.mobile) {
+                document.querySelector('.btn-search').addEventListener('click', function (e) {
+                    if (document.querySelector('#search').value) {
+                        document.title = document.querySelector('#search').value.toUpperCase();
+                        _config2.default.slidePos = [0];
+                        if (main.newSearch) {
+                            _config2.default.reset();
+                            var wrapper = document.querySelector('.wrapper');
+                            var pages = document.querySelector('#pages');
+                            while (wrapper.firstChild) {
+                                wrapper.removeChild(wrapper.firstChild);
+                            }while (pages.firstChild) {
+                                pages.removeChild(pages.firstChild);
+                            }
                         }
-                    }
-                    main.newSearch = true;
-                    main.render.addNewSlide(true, null, null);
-                    main.request.initialization(main);
-                    _config2.default.currentPage = 0;
-                } else _config2.default.showInfo('please enter search keyword');
-            });
+                        main.newSearch = true;
+                        main.render.addNewSlide(true, null, null);
+                        main.request.initialization(main);
+                        _config2.default.currentPage = 0;
+                    } else _config2.default.showInfo('please enter search keyword');
+                });
+            }
 
             //authorization button listener
             var clicked = false;
@@ -285,7 +291,7 @@ var Listeners = function () {
         value: function slideMove(e, isTouchEvent, render, request) {
             // alert(window.screen.availWidth);
             var scrollSize = window.innerWidth;
-            if (_config2.default.mobile) scrollSize = window.screen.availWidth;
+            // if(config.mobile) scrollSize = window.screen.availWidth;
             if (isTouchEvent) {
                 this.deltaX = e.changedTouches[0].clientX - this.pointX;
                 this.pointX = e.changedTouches[0].clientX;
@@ -663,6 +669,7 @@ var _config2 = _interopRequireDefault(_config);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+_config2.default.checkMobile();
 _config2.default.chooseVideosCount();
 var main = new _main2.default();
 main.render.renderPage();
@@ -708,7 +715,7 @@ var Render = function () {
     _createClass(Render, [{
         key: 'renderPage',
         value: function renderPage() {
-
+            document.body.style.height = window.innerHeight + 'px';
             // let subscr = document.createElement('div');
             // subscr.classList.add('g-ytsubscribe');
             // subscr.classList.add('btn-subscr');
@@ -731,13 +738,19 @@ var Render = function () {
             var email = document.createElement('p');
 
             var hr = document.createElement('hr');
-            var logoDiv = document.createElement('div');
+            var logoDiv = void 0;
+            if (!_config2.default.mobile) {
+                logoDiv = document.createElement('div');
+            }
             var img = document.createElement('img');
             var a = document.createElement('a');
             var input = document.createElement('input');;
             var searchSection = document.createElement('section');
             //let label = document.createElement('label');
-            var searchButton = document.createElement('button');
+            var searchButton = void 0;
+            if (!_config2.default.mobile) {
+                searchButton = document.createElement('button');
+            };
 
             var i = document.createElement('i');
 
@@ -787,21 +800,35 @@ var Render = function () {
 
             //i.classList.add('fa', 'fa-search');
             //label.appendChild(i);
-            searchButton.classList.add('btn');
-            searchButton.classList.add('btn-search');
-            searchButton.innerHTML = 'SEARCH';
+            if (!_config2.default.mobile) {
+                searchButton.classList.add('btn');
+            }
+            if (!_config2.default.mobile) {
+                searchButton.classList.add('btn-search');
+            }
+            if (!_config2.default.mobile) {
+                searchButton.innerHTML = 'SEARCH';
+            }
             // input.setAttribute('type', 'text');
             input.setAttribute('id', 'search');
             //input.setAttribute('autofocus', '');
             // create logo
             img.classList.add('logo-image');
             img.setAttribute('src', './img/logo.png');
-            logoDiv.classList.add('logo');
+            if (!_config2.default.mobile) {
+                logoDiv.classList.add('logo');
+            }
             a.setAttribute('href', 'https://www.youtube.com/');
             a.appendChild(img);
-            logoDiv.appendChild(a);
-            searchSection.appendChild(logoDiv);
-            searchSection.appendChild(searchButton); // here label
+            if (!_config2.default.mobile) {
+                logoDiv.appendChild(a);
+            }
+            if (!_config2.default.mobile) {
+                searchSection.appendChild(logoDiv);
+            }
+            if (!_config2.default.mobile) {
+                searchSection.appendChild(searchButton);
+            } // here label
             searchSection.appendChild(input);
             document.body.appendChild(searchSection);
 
@@ -1114,11 +1141,8 @@ var Resize = function () {
     _classCallCheck(this, Resize);
 
     window.onresize = function () {
-      if (!navigator.userAgent.match(/Windows/i)) {
-        _config2.default.showInfo('Mobile version');
-        _config2.default.mobile = true;
-        _config2.default.videosCount = 1;
-      } else {
+      document.body.style.height = window.innerHeight + 'px';
+      if (!_config2.default.mobile) {
         _config2.default.showInfo('Desktop version');
         if (window.innerWidth > 1250) {
           if (_config2.default.videosCount !== 3) {
